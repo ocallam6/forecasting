@@ -1,0 +1,102 @@
+---
+title: "Time series *plastics* with Holt-Winters algorithms"
+author: "Matthew O'Callaghan"
+date: " 2019 "
+output: 
+   html_document: default
+   
+---
+<!-- ----------------------------------------------- --> 
+
+```{r setup, include=FALSE,warning=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+<!-- ----------------------------------------------- --> 
+<!-- ----------------DATA IMPORT-------------------- --> 
+<!-- ----------------------------------------------- --> 
+## Plastics Data:
+According to page 39 of the fma package [documentation ](www.https://cloud.r-project.org/web/packages/fma/fma.pdf) we have the following information about the date we are using throughout this assignment: 
+
+* **Description**
+  + Monthly sales of product A for a plastics  manufacturer.
+* **Usage**
+  + plastics
+* **Format**
+  + Time series data
+  
+  
+```{r message=FALSE}
+# Importing forecasting package where plastics is contained:
+require("fma")
+require("ggplot2")
+plastics
+```
+The time is indexed by years ranging from 1 to 5. The actual years at which these indices indicate is not shown in the data or the documentation. Moreover without further information we assume the sales figurue indicates units sold.
+
+<!-- ----------------------------------------------- --> 
+<!-- ------------DATA VISUALISATION------------------ -->
+<!-- ----------------------------------------------- --> 
+## Data Preperation:
+We are dealing with monthly sales data so it may be useful to make a trading day adjustment. Unfortunately, for this, we would require the actual year in which this data took place. However we can make a month length adjustment. The month length adjustment transforms the $y_i$ values of our time series so that they represent the value divided an average month length:
+$$w_i=y_i \times \frac{365.25}{12 \times d_i}$$    
+Where $w_i,y_i$ are the transformed and untransformed values of the time-series, respectively. $d_i$ is the number of days in month $i$.We are dealing with a 5 year period. This means that either one or two of the years will be leap years. 
+Our formula does count for leap years but it requires that the number of days in February, $d_2$, to be $28.25$.
+```{r message=FALSE}
+d<-c(31,28.25,31,30,31,30,31,31,30,31,30,31)
+plastics_transformed<-plastics
+for (i in 0:59) 
+{
+  number<-i%%12 +1
+  f<-function(sales)
+  {
+    output<-sales*(365.25/(12*d[number]))
+    return(output)
+  }
+  
+  plastics_transformed[i+1]<-f(plastics_transformed[i+1])
+}
+plastics_transformed
+```
+
+
+## Data Visualisation:
+First we look at the full time series plot of the untransformed data:
+```{r message=FALSE}
+autoplot(plastics) + ggtitle("Monthly sales of product A for a plastics manufacturer. ") +
+  xlab("Time in Years") + ylab("Sales")
+```
+
+```{r message=FALSE}
+autoplot(plastics_transformed) + ggtitle("Transformed-Monthly sales of product A for a plastics manufacturer. ") +
+  xlab("Time in Years") + ylab("Sales")
+
+plot(decompose(plastics_transformed))
+```
+
+
+#### Visual Inspection:
+There are a few visual quilities which are evident from the time series plot:
+
+* There is a clear seasonality and general trend.
+* The seasonality appears to be a yearly cycle.
+* The trend appears to be a gradual increase from year to year.
+* The minimum of each year occurs near the beginning of the year.
+* The maximum of each year occurs around three-fifths of the way through the year.
+* There are evident irregularities in the time series towards the end of year two and near half way through year three.
+
+Further analysis of the time series is needed to understand the data properlly. 
+
+
+
+#### Decomposing the Time-Series:
+We can decompose the time series in order to get a better understanding of the trend, seasonal and random component.   
+
+First we consider assume the additive model: 
+$$Y[t]=T[t]+S[t]+e(t)$$
+where $Y$ is the time series, $S$ is the seasonal component and $e$ is the error component; $t$ represents time.
+```{r message=FALSE}
+plot(decompose(plastics))
+```
+
+#### Seasonality Analysis:
+
