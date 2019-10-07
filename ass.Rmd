@@ -60,25 +60,23 @@ plastics_transformed
 
 
 ## Data Visualisation:
-First we look at the full time series plot of the untransformed data:
+First we consider the untransformed data. We shall analyse the transformed data later on to see whether the tranformation is useful for our purposes.
+
+Looking at the full time series plot of the untransformed data:
 ```{r message=FALSE}
 autoplot(plastics) + ggtitle("Monthly sales of product A for a plastics manufacturer. ") +
   xlab("Time in Years") + ylab("Sales")
 ```
 
-```{r message=FALSE}
-autoplot(plastics_transformed) + ggtitle("Transformed-Monthly sales of product A for a plastics manufacturer. ") +
-  xlab("Time in Years") + ylab("Sales")
-
-plot(decompose(plastics_transformed))
-```
 
 
-#### Visual Inspection:
+
+#### Visual Interpretation:
 There are a few visual quilities which are evident from the time series plot:
 
 * There is a clear seasonality and general trend.
 * The seasonality appears to be a yearly cycle.
+* The seasonality indicates a decrease in the sales at the start of each year and an increase in sales toward the end of each year.
 * The trend appears to be a gradual increase from year to year.
 * The minimum of each year occurs near the beginning of the year.
 * The maximum of each year occurs around three-fifths of the way through the year.
@@ -86,9 +84,32 @@ There are a few visual quilities which are evident from the time series plot:
 
 Further analysis of the time series is needed to understand the data properlly. 
 
+#### Seasonality Analysis:
+The time-series plot indiccates that there is seasonality. We now look at the seasonal plot of the plastics data:
 
+```{r message=FALSE}
+ggseasonplot(plastics, year.labels=TRUE, year.labels.left=TRUE) +
+  ylab("Sales") +
+  ggtitle("Seasonal plot: Plastics")
 
-#### Decomposing the Time-Series:
+ggsubseriesplot(plastics) +
+  ylab("Sales") +
+  ggtitle("Seasonal subseries plot: Plastics")
+```
+
+* The seaonal plot and the seasonal subseries plot reflects the seasonal nature of the data. 
+* There is strong seasonality. However, both plots indicate that, from June onwards in year 5, the time series doesn't seem to continue the seasonal cycle There isn't as much overlap between year 5 and the previous years.
+
+* The decrease in seasonality in the final year can be also seen in the error. (refer to section)
+
+* The vertical movement of both plots at each year reftects our increasing trend.
+
+## Lagplot
+```{r message=FALSE}
+gglagplot(plastics)
+```
+
+## Decomposing the Time-Series:
 We can decompose the time series in order to get a better understanding of the trend, seasonal and random component.   
 
 First we consider assume the additive model: 
@@ -97,6 +118,16 @@ where $Y$ is the time series, $S$ is the seasonal component and $e$ is the error
 ```{r message=FALSE}
 plot(decompose(plastics))
 ```
+The addititve model shows a very strong seasonal pattern with an increasing trend. This agrees with the original visual inspection. 
 
-#### Seasonality Analysis:
 
+
+Now we consider the multiplicative model:  
+$$Y[t]=T[t]\times S[t]\times e(t)$$
+```{r message=FALSE}
+plot(decompose(plastics,type="multiplicative"))
+```
+
+
+
+#### Comparing to Transformed Data:
