@@ -3,7 +3,8 @@ title: "Time series *plastics* with Holt-Winters algorithms"
 author: "Matthew O'Callaghan"
 date: " 2019 "
 output: 
-   html_document: default
+   html_document: 
+      number_sections: TRUE
    
 ---
 <!-- ----------------------------------------------- --> 
@@ -14,8 +15,11 @@ knitr::opts_chunk$set(echo = TRUE)
 <!-- ----------------------------------------------- --> 
 <!-- ----------------DATA IMPORT-------------------- --> 
 <!-- ----------------------------------------------- --> 
-## Plastics Data:
-According to page 39 of the fma package [documentation ](www.https://cloud.r-project.org/web/packages/fma/fma.pdf) we have the following information about the date we are using throughout this assignment: 
+***
+# Plastics Data:
+
+<font size="3">
+According to page 39 of the 'fma' package [documentation ](www.https://cloud.r-project.org/web/packages/fma/fma.pdf) we have the following information about the date we are using throughout this assignment: 
 
 * **Description**
   + Monthly sales of product A for a plastics  manufacturer.
@@ -24,70 +28,72 @@ According to page 39 of the fma package [documentation ](www.https://cloud.r-pro
 * **Format**
   + Time series data
   
-  
+<br>
+
 ```{r message=FALSE}
-# Importing forecasting package where plastics is contained:
+# Importing forecasting package where plastics is contained and preferred plotting package:
 require("fma")
 require("ggplot2")
 plastics
 ```
-The time is indexed by years ranging from 1 to 5. The actual years at which these indices indicate is not shown in the data or the documentation. Moreover without further information we assume the sales figurue indicates units sold.
+
+<br>
+
+
+The data is thus monthly, taken over a five year period. We assume all necessary Month Length Adjustments or Trading Day Adjustments have been made. Moreover we will assume that the value of sales indicates units sold.
+
+
+
+***  
+
+<br>
 
 <!-- ----------------------------------------------- --> 
 <!-- ------------DATA VISUALISATION------------------ -->
 <!-- ----------------------------------------------- --> 
-## Data Preperation:
-We are dealing with monthly sales data so it may be useful to make a trading day adjustment. Unfortunately, for this, we would require the actual year in which this data took place. However we can make a month length adjustment. The month length adjustment transforms the $y_i$ values of our time series so that they represent the value divided an average month length:
-$$w_i=y_i \times \frac{365.25}{12 \times d_i}$$    
-Where $w_i,y_i$ are the transformed and untransformed values of the time-series, respectively. $d_i$ is the number of days in month $i$.We are dealing with a 5 year period. This means that either one or two of the years will be leap years. 
-Our formula does count for leap years but it requires that the number of days in February, $d_2$, to be $28.25$.
-```{r message=FALSE}
-d<-c(31,28.25,31,30,31,30,31,31,30,31,30,31)
-plastics_transformed<-plastics
-for (i in 0:59) 
-{
-  number<-i%%12 +1
-  f<-function(sales)
-  {
-    output<-sales*(365.25/(12*d[number]))
-    return(output)
-  }
-  
-  plastics_transformed[i+1]<-f(plastics_transformed[i+1])
-}
-plastics_transformed
-```
 
 
-## Data Visualisation:
-First we consider the untransformed data. We shall analyse the transformed data later on to see whether the tranformation is useful for our purposes.
 
-Looking at the full time series plot of the untransformed data:
-```{r message=FALSE}
+# Data Visualisation:
+
+
+We first look at the full time-series plot of the data:
+
+<br>
+
+```{r message=FALSE, fig.align = 'center'}
 autoplot(plastics) + ggtitle("Monthly sales of product A for a plastics manufacturer. ") +
   xlab("Time in Years") + ylab("Sales")
+
 ```
 
 
+<br><br>
 
-
-#### Visual Interpretation:
+## Visual Interpretation:
 There are a few visual quilities which are evident from the time series plot:
 
-* There is a clear seasonality and general trend.
-* The seasonality appears to be a yearly cycle.
-* The seasonality indicates a decrease in the sales at the start of each year and an increase in sales toward the end of each year.
-* The trend appears to be a gradual increase from year to year.
-* The minimum of each year occurs near the beginning of the year.
-* The maximum of each year occurs around three-fifths of the way through the year.
-* There are evident irregularities in the time series towards the end of year two and near half way through year three.
+* There is a clear seasonality which appears to be a yearly cycle.
+  + The seasonality indicates an increase in the sales at the start of each year, reaching a peak around September, then a decrease in sales toward the end of each year. 
+  + This pattern could be due to the increased demand of retailers buying from a manufacturer to prepare for the Christmas period, then subsequently dropping in order to sell off existing stock.  
+* There is a steady upward trend.
+* There are small irregularities in the time series: 
+  + A sharp change near the end of year two.
+  + A sharp decrease near halfway through year three
+  + A possible explanation for sharp changes in the time-series could be a labour strike
 
-Further analysis of the time series is needed to understand the data properlly. 
 
-#### Seasonality Analysis:
-The time-series plot indiccates that there is seasonality. We now look at the seasonal plot of the plastics data:
+A visual inspection gives us a good idea as to the nature of the time-series. However, further analysis is needed to understand the data correctly 
+<br><br>
 
-```{r message=FALSE}
+
+## Seasonality Analysis:
+The time-series plot indiccates that there is seasonality. We now look at the seasonal plot and the seasonal subplot of the plastics data:
+
+<br>
+
+
+```{r message=FALSE, fig.align = 'center'}
 ggseasonplot(plastics, year.labels=TRUE, year.labels.left=TRUE) +
   ylab("Sales") +
   ggtitle("Seasonal plot: Plastics")
@@ -97,37 +103,186 @@ ggsubseriesplot(plastics) +
   ggtitle("Seasonal subseries plot: Plastics")
 ```
 
-* The seaonal plot and the seasonal subseries plot reflects the seasonal nature of the data. 
+
+<br>
+
+* The seaonal plot and the seasonal subseries plot reflects that the time-series is seasonal but its seasonality decreases September of the final year.
+  + The decrease in seasonality in the fifth year can be also seen in the increase of error in the decomposition of the time series in section 2.4.
+  + This may be due to product A becoming dated, or the introduction of a competing manufacturer for a similar product, in it's fifth year and becoming less lucrative to customers and thus retailers.
+  
 * There is strong seasonality. However, both plots indicate that, from June onwards in year 5, the time series doesn't seem to continue the seasonal cycle There isn't as much overlap between year 5 and the previous years.
 
-* The decrease in seasonality in the final year can be also seen in the error. (refer to section)
 
-* The vertical movement of both plots at each year reftects our increasing trend.
+* The vertical movement of both plots at each month confirms our visual inspection of increasing trend.
+<br><br>
 
-## Lagplot
-```{r message=FALSE}
+## Autocorrelation:
+
+We analyse the lagplot, the ACF and the PACF to understand the correlation between the time-series and it's lagged time-series.
+
+<br>
+
+
+```{r message=FALSE, fig.align = 'center'}
 gglagplot(plastics)
+
 ```
 
+
+<br>
+
+* The lag plot in lag 12 illustrates the strong seasonality in in a 12 month period. 
+* The lag plot in lag 1 strenthens the idea that there is an increasing trend.
+* The irregularities in the plot from month 10 to 12 reflect the irregularities in year 5 previously discussed.
+
+<br>
+
+
+```{r message=FALSE, fig.align = 'center'}
+
+ggAcf(plastics) 
+
+```
+
+
+
+<br>
+
+* The ACF has a large positive correlation for small lags, which confirms the trending nature of the data.
+  + This is due to the fact that the ACF at lag 1 measures the correlation between successive values in the time series. 
+
+* The ACF at lag 12 is large and positive. This again confirms the seasonal nature of the data.
+
+<br>
+
+
+
+```{r message=FALSE, fig.align = 'center'}
+
+
+ggPacf(plastics)
+
+```
+
+
+<br>
+
+
+```{r message=FALSE, fig.align = 'center'}
+plot(plastics-mean(plastics),lwd="3")
+lines(lag(plastics-mean(plastics),12),col="red",lwd=3)
+```
+
+
+<br>
+
+For completeness we include a lag plot which once again shows the seasonal and trending behaviour of our time series.
+
+<br><br>
+
+
 ## Decomposing the Time-Series:
+
 We can decompose the time series in order to get a better understanding of the trend, seasonal and random component.   
 
 First we consider assume the additive model: 
 $$Y[t]=T[t]+S[t]+e(t)$$
 where $Y$ is the time series, $S$ is the seasonal component and $e$ is the error component; $t$ represents time.
-```{r message=FALSE}
+
+<br>
+
+
+```{r message=FALSE, fig.align = 'center'}
 plot(decompose(plastics))
 ```
-The addititve model shows a very strong seasonal pattern with an increasing trend. This agrees with the original visual inspection. 
+
+
+<br>
+
+The seasonal and trending components agree with our previous analysis.
 
 
 
 Now we consider the multiplicative model:  
 $$Y[t]=T[t]\times S[t]\times e(t)$$
-```{r message=FALSE}
+
+<br>
+
+
+```{r message=FALSE, fig.align = 'center'}
 plot(decompose(plastics,type="multiplicative"))
 ```
 
 
+<br>
 
-#### Comparing to Transformed Data:
+Again the seasonal and trending components agree with our previous analysis.
+
+
+Now both the multiplicative and additive decompostion are almost identical, bar the error component. To see which is more useful we can check the SSE of the model fit with both forms of decomposition.
+
+
+
+
+
+## Conclusion
+
+The information we have learned from the time-series indicates that, because of the evident trend and seasonality, the best algorithm to use will be the Holt-Winters’ Exponential Smoothing with Seasonality. We shall check both the multiplicative model and the additive model.
+
+# Fitting the Model
+We begin by by fitting the Holt-Winters’ Exponential Smoothing with Seasonality.  
+
+## Holt-Winters’ Exponential Smoothing with Seasonality - Automatic
+
+Here $\alpha, \beta, \gamma$ are not specified and the HW R function selects them on the minimal value of SSE.
+
+Firstly we look at the multiplicative model:
+
+```{r message=FALSE, fig.align = 'center'}
+HoltWinters(plastics,seasonal = "multiplicative")
+
+
+```
+
+Next the additive model:
+
+```{r message=FALSE, fig.align = 'center'}
+HoltWinters(plastics)
+
+
+```
+
+Now we compare the two models by SSE:
+```{r message=FALSE, fig.align = 'center'}
+HoltWinters(plastics,seasonal = "multiplicative")$SSE
+
+
+```
+
+```{r message=FALSE, fig.align = 'center'}
+HoltWinters(plastics)$SSE
+
+
+```
+
+
+```{r message=FALSE, fig.align = 'center'}
+
+fit1 <- hw(plastics,seasonal="additive")
+fit2 <- hw(plastics,seasonal="multiplicative")
+autoplot(plastics) +
+  autolayer(fit1, series="HW additive forecasts", PI=FALSE) +
+  autolayer(fit2, series="HW multiplicative forecasts",
+    PI=FALSE) +
+  xlab("Year") +
+  ylab("Sales") +
+  ggtitle("Plastics Sales") +
+  guides(colour=guide_legend(title="Forecast"))
+```
+
+Thus we can see the projected forecast using the selected method.
+
+
+
+
+</font>
