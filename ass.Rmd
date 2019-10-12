@@ -74,15 +74,14 @@ autoplot(plastics) + ggtitle("Monthly sales of product A for a plastics manufact
 There are a few visual quilities which are evident from the time series plot:
 
 * There is a clear seasonality which appears to be a yearly cycle.
-  + The seasonality indicates an minimum around February at the start of each year, followed by a ramping period towards reaching a peak around September. This is then followed by a decrease in sales toward the end of each year. 
+  + The seasonality indicates an minimum around February at the start of each year, followed by a ramping period until it reaches its peak around September. This is then followed by a decrease in sales toward the end of each year. 
   + This pattern could be due to the increased demand of retailers buying from a manufacturer to prepare for the Christmas period, then subsequently dropping in order to sell off existing stock.  
 * There is a steady upward trend.
-  +This could reflect an increase in demand for the product.
+  + This could reflect an increase in demand for the product from year to year.
 * There are small visual irregularities in the time series: a sharp change near the end of year two and halfway through year three.
-  + A possible explanation for sharp changes in the time-series could be a labour strike or adverse weather conditions preventing work.
+  + A possible explanation for sharp changes in the time-series could be a labour strike or adverse weather conditions preventing production.
 
 
-A visual inspection gives us a good idea as to the nature of the time-series. However, further analysis is needed to understand the data correctly 
 <br><br>
 
 
@@ -104,11 +103,12 @@ ggsubseriesplot(plastics) +
 
 <br>
 
-* The seaonal plot and the seasonal subseries plot reflects that the time-series is seasonal but its seasonality decreases from September onwards in the final year.
-  + The decrease in seasonality in the fifth year can be also seen in the increase of error in the decomposition of the time series in section 2.4.
-  + This may be due to product A becoming dated, or the introduction of a competing manufacturer for a similar product, in it's fifth year and becoming less lucrative to customers and thus retailers.
+* The seaonal plot and the seasonal subseries plot reflects that the time-series is seasonal but the strength of seasonality decreases from September onwards in the final year.
+  + This is easily seen in the seasonal subplot by the sharp decreases in the plot of Sep to Dec. Moreover there is a noticeable diffrerence in the shape of year 5 with respect to the previous years in the seasonal plot.
+  + The increase of the error component in the decomposition of the time series in section 2.4 also reflects this decrease of seasonality in the final year.
+  + This may be due to product A becoming dated, the introduction of a competing manufacturer for a similar product or an increase in the cost of production in year five and thus becoming less lucrative to customers and subsequently retailers.
   
-* We see that in year 5 the sales take a similar maximum to the previous year; however this occurs in June. This disaggrees with the seasonal pattern and the upwards trajectory of the trend. The sales figures then taper off earlier than usual, however they decrease in a steadier manner.
+* We see that in year 5 the sales take a similar maximum to the previous year; however this occurs in June as apposed to September. This disaggrees with the seasonal pattern and the upwards trajectory of the trend. The sales figures then begin their decrease earlier than usual, however the slope of descent is less than that of previous years.
 
 * The vertical movement of both plots up the y axis at each month confirms our visual inspection of increasing trend.
 <br><br>
@@ -178,7 +178,7 @@ We can decompose the time series in order to get a better understanding of the t
 
 First we consider assume the additive model: 
 $$Y[t]=T[t]+S[t]+e(t)$$
-where $Y$ is the time series, $S$ is the seasonal component and $e$ is the error component; $t$ represents time.
+where, throughout this section, $Y$ is the time series, $S$ is the seasonal component and $e$ is the error component; $t$ represents time.
 
 <br>
 
@@ -190,7 +190,7 @@ plot(decompose(plastics))
 
 <br>
 
-The seasonal and trending components agree with our previous analysis.
+
 
 
 
@@ -207,25 +207,27 @@ plot(decompose(plastics,type="multiplicative"))
 
 <br>
 
-Again the seasonal and trending components agree with our previous analysis.
+The decompositions agree with our previous analysis.
 
 
-Now both the multiplicative and additive decompostion are almost identical, bar the error component. To see which is more useful we can check the SSE of the model fit with both forms of decomposition.
+Both the multiplicative and additive decompostion are very similar. To see which is more useful we can check the SSE of the model fit with both forms of decomposition.
 
 
 
 
 
-## Conclusion
+## Which algorithm to choose?
 
-The information we have learned from the time-series indicates that, because of the evident trend and seasonality, the best algorithm to use will be the Holt-Winters’ Exponential Smoothing with Seasonality. We shall check both the multiplicative model and the additive model.
+The information we have learned from the time-series visual analysis indicates that, because of the evident trend and seasonality, the best Holt-Winter algorithm to use will be the Holt-Winters’ Exponential Smoothing with Seasonality, as this algorithm utilises both trend and seasonality.
 
 # Fitting the Model
-We begin by by fitting the Holt-Winters’ Exponential Smoothing with Seasonality.  
+We begin by fitting the Holt-Winters’ Exponential Smoothing with Seasonality. Both the multiplicative model and the additive model will be tested. The best algorithm will be chosen based on which decomposition gives the smallest SSE in the fit. 
+In this section we use the notation as in the [class notes](
+https://www.scss.tcd.ie/Rozenn.Dahyot/ST3010/RzDTimeSeriesForecasting.pdf): Chapter 8.
 
 ## Fitting the Holt-Winters’ Exponential Smoothing with Seasonality 
 
-Here $\alpha, \beta, \gamma$ are not specified and the HW R function selects them on the minimal value of SSE.
+Here $\alpha, \beta, \gamma \in [0,1]$ are not predefined and the *HoltWinters()* R function selects them based on the value which minimises SSE.
 
 Firstly we look at the multiplicative model:
 
@@ -234,16 +236,22 @@ Firstly we look at the multiplicative model:
 HoltWinters(plastics,seasonal = "multiplicative")
 ```
 
+Which gives: $$ \alpha =0.8956671,\quad \beta=0,\quad \gamma=1$$
+This implies that $$b_t=b_{t-1}\\ S_t=\frac{y_t}{L_t}$$
 Next the additive model:
 
 ```{r message=FALSE, fig.align = 'center'}
 HoltWinters(plastics)
 ```
 
+Which gives: $$ \alpha =0.8597021,\quad \beta=0,\quad \gamma=1$$
+This implies that $$b_t=b_{t-1}\\ S_t=y_t-L_t$$
 
+The zero value of $\beta$ then indicates that the slope component does not change over time. The value of $\gamma=1$ indicates that the seasonal component changes over time.
 
+## Model Comparison:
 
-Now we compare the two models by SSE:
+Now we compare the HW-Seasonality models by SSE:
 ```{r message=FALSE, fig.align = 'center'}
 HoltWinters(plastics,seasonal = "multiplicative")$SSE
 ```
@@ -254,53 +262,48 @@ HoltWinters(plastics)$SSE
 Also compare the MAPEs of the two models:
 ```{r message=FALSE, fig.align = 'center'}
 mean(abs(HoltWinters(plastics,seasonal = "multiplicative")$x - HoltWinters(plastics,seasonal = "multiplicative")$fitted)/HoltWinters(plastics,seasonal = "multiplicative")$x)
- 
 ```
 
 ```{r message=FALSE, fig.align = 'center'}
 mean(abs(HoltWinters(plastics)$x - HoltWinters(plastics)$fitted)/HoltWinters(plastics)$x)
  
 ```
-Now the SSE indicates that we should use the additive model while the mape indicates we should use the multiplicative model. We are going to choose the model based on the SSE and go forward using the additive model.
+Now the SSE indicates that we should use the additive model while the MAPE indicates we should use the multiplicative model. We are going to choose the model based on the SSE and go forward using the additive model.
+
+```{r message=FALSE, fig.align = 'center'}
+
+```
+
 
 ## Predictions
 ### Using the definition
 Using the formula
 $$
-F_{n+k} = (L_n+k \times b_n)\times S_{n+k-s}
+F_{n+k} = (L_n+k \times b_n)+S_{n+k-s}
 $$
-with $k=1$, $s=12$ as the seasonality is a 12 month cycle.
-the prediction can be computed as follows
+with $s=12$ as the seasonality is a 12 month cycle.
+The predictions for the next three months ($k=1,2,3$) can be computed as follows:
 
 ```{r message=FALSE}
-k=1  # prediction computed 1 month ahead
+
 s=12 # frequency 12 month 
 Ln=HoltWinters(plastics, seasonal="additive")$coefficients[1]
 bn=HoltWinters(plastics, seasonal="additive")$coefficients[2]
 snk= HoltWinters(plastics, seasonal="additive")$coefficients[3]
-(Ln+k*bn+snk)
+
+for (k in 1:3) {
+  cat("The forecast at month",k,"of year 6 is: ",(Ln+k*bn+snk),"\n")
+}
 ```
 
 
-
-Likewise prediction can be computed for $k=5$ months ahead from the last observation of the time series *plastics* : 
-
-```{r message=FALSE}
-k=5  # prediction computed 1 month ahead
-s=12 # frequency 12 month 
-Ln=HoltWinters(plastics, seasonal="additive")$coefficients[1]
-bn=HoltWinters(plastics, seasonal="additive")$coefficients[2]
-snk= HoltWinters(plastics, seasonal="additive")$coefficients[7]
-(Ln+k*bn+snk)
-
-```
 ### Using the *predict()* function
 We can also use the in-built *predict()* function:
 
 ```{r message=FALSE}
 predict(HoltWinters(plastics, seasonal="additive"),n.ahead=1)[1]
-
-predict(HoltWinters(plastics, seasonal="additive"),n.ahead=5)[5]
+predict(HoltWinters(plastics, seasonal="additive"),n.ahead=2)[2]
+predict(HoltWinters(plastics, seasonal="additive"),n.ahead=3)[3]
 ```
 
 
@@ -308,17 +311,27 @@ predict(HoltWinters(plastics, seasonal="additive"),n.ahead=5)[5]
 We can also use the in-built *forecast()* function:
 
 ```{r message=FALSE}
-forecast(HoltWinters(plastics, seasonal="additive"),h=1)
-forecast(HoltWinters(plastics, seasonal="additive"),h=5)
+forecast(HoltWinters(plastics, seasonal="additive"),h=3)
 ```
+
+## Comments on the forecast
+* The January value of year 6 is predicted to be 948.3095, with a 95 percent prediction interval of $(853.75,1042.869)$. Over the first five years the January figure steadily rises from $742 \rightarrow 1030$. 
+* The February value of year 6 is predicted to be 914.0795, with a 95 percent prediction interval of $(789.3797,1038.779)$. Over the first five years the January figure steadily rises from $697 \rightarrow 1032$.
+* The February value of year 6 is predicted to be 993.7539, with a 95 percent prediction interval of $(844.8963,1142.612)$. Over the first five years the January figure steadily rises from $776 \rightarrow 1126$.
+
+
+The dip in sales in the second half of year five heavily influences the forecasted values of year six. Because of that dip, the forecasts for January, February and March are lower than the corresponding values in year five.
+
+
+
 ## Plots of Forecast
 We can plot the forecast:
 ```{r message=FALSE, fig.align = 'center'}
-plot(forecast(HoltWinters(plastics, seasonal="additive")))
+plot(forecast(HoltWinters(plastics, seasonal="additive"), level=c(80,95)))
 ```
+The dark shaded region shows 80% prediction intervals. That is, each future value is expected to lie in the dark shaded region with a probability of 80%. The light shaded region shows 95% prediction intervals. These prediction intervals are a useful way of displaying the uncertainty in forecasts.
 
-The prediction intervals are contained within the shaded region. Prediction intervals are given by $$\hat{y}_{T+k} \pm c \hat{\sigma_k}$$ where c is the probability coverage multiplier.
-
+The forecasted shape of year six is similar to that of year three. However the forecast into year seven seems to assume that the original trend will resume.
 
 Moreover we can plot the forecast and compare it to the additive model to see the difference.
 
@@ -330,7 +343,7 @@ Moreover we can plot the forecast and compare it to the additive model to see th
 fit1 <- hw(plastics,seasonal="additive")
 fit2 <- hw(plastics,seasonal="multiplicative")
 autoplot(plastics) +
-  autolayer(fit1, series="HW additive forecasts", PI=FALSE) +
+  autolayer(fit1, series="HW additive forecasts", PI=TRUE) +
   autolayer(fit2, series="HW multiplicative forecasts",
     PI=FALSE) +
   xlab("Year") +
@@ -339,7 +352,7 @@ autoplot(plastics) +
   guides(colour=guide_legend(title="Forecast"))
 ```
 
-Thus we can see the projected forecast using the selected method.
+In year six the multiplicative forecast is just contained just within the 95 percent prediction interval. It seems the multiplicative model would have taken less of an impact from the decrease in seasonality in the second half of year five.
 
 
 ## Residual Diagnostics
@@ -350,5 +363,10 @@ mean(res)
 
 ```
 
-This shows that our method produces a forecast that appear to account for all available information. The mean of the residuals is relatively close to zero and there is no significant correlation in the residuals. The 
+This shows that our method produces a forecast that appear to account for all available information. The mean of the residuals is relatively close to zero and there is no significant correlation in the residuals. It resembles white noise. 
+
+# Conclusion
+The plastics data admits a clear trend and seasonality, however in the final half of year five that pattern slightly changes. We chose the Holt Winters Additive Model with Seasonality due to the fact it had the smallest SSE and used it to compute the forecast of the next three months. From this we learned that due to the changes in year five the Holt Winters model predicted lower values for year six than those of year five.
+
+
 </font>
