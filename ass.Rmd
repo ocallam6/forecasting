@@ -71,22 +71,25 @@ autoplot(plastics) + ggtitle("Monthly sales of product A for a plastics manufact
 
 <br><br>
 
-There are a few visual quilities which are evident from the time series plot:
+There are a few quilities which are evident from the time series plot:
+
+
 
 * There is a clear seasonality which appears to be a yearly cycle.
-  + The seasonality indicates an minimum around February at the start of each year, followed by a ramping period until it reaches its peak around September. This is then followed by a decrease in sales toward the end of each year. 
+  + The plot indicates an minimum around February at the start of each year, followed by a ramping period until it reaches its peak around September. This is then followed by a decrease in sales toward the end of each year. 
   + This pattern could be due to the increased demand of retailers buying from a manufacturer to prepare for the Christmas period, then subsequently dropping in order to sell off existing stock.  
 * There is a steady upward trend.
   + This could reflect an increase in demand for the product from year to year.
 * There are small visual irregularities in the time series: a sharp change near the end of year two and halfway through year three.
   + A possible explanation for sharp changes in the time-series could be a labour strike or adverse weather conditions preventing production.
 
+* There is, of course, noise.
 
 <br><br>
 
 
-## Seasonality Analysis:
-The time-series plot indicates that there is seasonality. We now look at the seasonal plot and the seasonal subplot of the plastics data:
+## Seasonality and Trend Analysis:
+The time-series plot indicates that there is seasonality. We now look at the seasonal plot and the seasonal subplot of the plastics data to further analyse these observations:
 
 <br>
 
@@ -103,19 +106,25 @@ ggsubseriesplot(plastics) +
 
 <br>
 
-* The seaonal plot and the seasonal subseries plot reflects that the time-series is seasonal but the strength of seasonality decreases from September onwards in the final year.
-  + This is easily seen in the seasonal subplot by the sharp decreases in the plot of Sep to Dec. Moreover there is a noticeable diffrerence in the shape of year 5 with respect to the previous years in the seasonal plot.
-  + The increase of the error component in the decomposition of the time series in section 2.4 also reflects this decrease of seasonality in the final year.
-  + This may be due to product A becoming dated, the introduction of a competing manufacturer for a similar product or an increase in the cost of production in year five and thus becoming less lucrative to customers and subsequently retailers.
-  
-* We see that in year 5 the sales take a similar maximum to the previous year; however this occurs in June as apposed to September. This disaggrees with the seasonal pattern and the upwards trajectory of the trend. The sales figures then begin their decrease earlier than usual, however the slope of descent is less than that of previous years.
+* The seaonal plot and the seasonal subseries plot reflects that the time-series displays significant seasonality with a period of 12 months. 
+  + The seasonal plot shows a similar shape for each year.
+  + The seasonal subseries plot shows that the value at each month is trending upwards, the movement of the means (blue lines) from month to month reflects the seasonal pattern.
 
 * The vertical movement of both plots up the y axis at each month confirms our visual inspection of increasing trend.
+
+
+
+
+
+* The shape of the final year shows some inconsistency to this pattern.
+  + This is seen in the seasonal subplot by the sharp decreases in the plot of Sep to Dec. 
+  + It is difficult to comment on this without further data. However, this may be due to product A becoming dated, the introduction of a competing manufacturer for a similar product or an increase in the cost of production in year five and thus becoming less lucrative to customers and subsequently retailers.
+
 <br><br>
 
 ## Autocorrelation:
 
-We analyse the lagplot, the ACF and the PACF to understand the correlation between the time-series and it's lagged time-series.
+We analyse the lagplot and the ACF to understand the correlation between the time-series and it's lagged time-series.
 
 <br>
 
@@ -127,16 +136,18 @@ gglagplot(plastics)
 
 <br>
 
-* The lag plot in lag 12 illustrates a strong correlation between values $y_t$ and $y_{t-12}$. Tis reflects the stong seasonality over a 12 month basis.
-* The lag plot in lag 1 strenthens the idea that there is an increasing trend as it indicates a correlation between $y_t$ and $y_{t-1}$.
-* The irregularities in the plot from month 10 to 12 reflect the irregularities in year 5 previously discussed.
+* The lag plot for a lag of 12 illustrates a strong correlation between values $y_t$ and $y_{t-12}$. This reflects the stong seasonality over a 12 month basis.
+  + The changes in the plot from months 10 to 12 reflect the differences in year 5 seen in the seasonal subseries plot.
+* The lag plot for lag 1 strenthens the idea that there is an increasing trend as it indicates a correlation between $y_t$ and $y_{t-1}$.
+
 
 <br>
-
-Now looking at the timeplot, ACF and PACF plot:
+The autocorrelation function (AFC) measures the correlation between the time series and a lagged copy of itself.
+Now looking at the ACF plot:
 
 ```{r message=FALSE, fig.align = 'center'}
-tsdisplay(plastics)
+ggAcf(plastics)
+
 ```
 
 
@@ -147,7 +158,7 @@ tsdisplay(plastics)
   + This is due to the fact that the ACF at lag 1 measures the correlation between successive values in the time series. 
 
 * The ACF at lag 12 is large and positive. This again confirms the 12 month seasonal nature of the data.
-  +This is due to the fact that the ACF at lag 12 measures the correlation between $y_t$ and $y_{t-12}$ values in the time series. 
+  + This is due to the fact that the ACF at lag 12 measures the correlation between $y_t$ and $y_{t-12}$ values in the time series. 
 
 <br>
 
@@ -167,7 +178,7 @@ lines(lag(plastics-mean(plastics),12),col="red",lwd=3)
 
 <br>
 
-This confirms the information previously extracted from the data
+This confirms the information previously extracted from the data: we have a strong seasonal pattern and upward trend.
 
 <br><br>
 
@@ -178,7 +189,7 @@ We can decompose the time series in order to get a better understanding of the t
 
 First we consider assume the additive model: 
 $$Y[t]=T[t]+S[t]+e(t)$$
-where, throughout this section, $Y$ is the time series, $S$ is the seasonal component and $e$ is the error component; $t$ represents time.
+where, throughout this section, $Y$ is the time series, $S$ is the seasonal component and $e$ is the random component; $t$ represents time.
 
 <br>
 
@@ -207,13 +218,15 @@ plot(decompose(plastics,type="multiplicative"))
 
 <br>
 
-The decompositions agree with our previous analysis.
+The decompositions agree with our understanding that there is an upward trend and a strong seasonal component. The change in the direction of the trend component during year five reflects the analysis in the seasonal plots.
 
 
 Both the multiplicative and additive decompostion are very similar. To see which is more useful we can check the SSE of the model fit with both forms of decomposition.
 
 
-
+<!-- ----------------------------------------------- --> 
+<!-- ----------------CHOOSING ALG-------------------- --> 
+<!-- ----------------------------------------------- --> 
 
 
 ## Which algorithm to choose?
@@ -259,7 +272,10 @@ HoltWinters(plastics,seasonal = "multiplicative")$SSE
 ```{r message=FALSE, fig.align = 'center'}
 HoltWinters(plastics)$SSE
 ```
-Also compare the MAPEs of the two models:
+Thus the SSE indicates that we should use the additive model.
+
+It may be worthwhile to note that the MAPE of the two models:
+
 ```{r message=FALSE, fig.align = 'center'}
 mean(abs(HoltWinters(plastics,seasonal = "multiplicative")$x - HoltWinters(plastics,seasonal = "multiplicative")$fitted)/HoltWinters(plastics,seasonal = "multiplicative")$x)
 ```
@@ -268,7 +284,9 @@ mean(abs(HoltWinters(plastics,seasonal = "multiplicative")$x - HoltWinters(plast
 mean(abs(HoltWinters(plastics)$x - HoltWinters(plastics)$fitted)/HoltWinters(plastics)$x)
  
 ```
-Now the SSE indicates that we should use the additive model while the MAPE indicates we should use the multiplicative model. We are going to choose the model based on the SSE and go forward using the additive model.
+indicate that the multiplicative model is better.
+
+However going forward we shall use the additive model, based on SSE.
 
 ```{r message=FALSE, fig.align = 'center'}
 
@@ -276,6 +294,11 @@ Now the SSE indicates that we should use the additive model while the MAPE indic
 
 
 ## Predictions
+<!-- ----------------------------------------------- --> 
+<!-- ----------------PREDICTIONS-------------------- --> 
+<!-- ----------------------------------------------- --> 
+
+
 ### Using the definition
 Using the formula
 $$
@@ -314,13 +337,15 @@ We can also use the in-built *forecast()* function:
 forecast(HoltWinters(plastics, seasonal="additive"),h=3)
 ```
 
+
+All methods are consistent and give us the same values for the predictions.
 ## Comments on the forecast
 * The January value of year 6 is predicted to be 948.3095, with a 95 percent prediction interval of $(853.75,1042.869)$. Over the first five years the January figure steadily rises from $742 \rightarrow 1030$. 
 * The February value of year 6 is predicted to be 914.0795, with a 95 percent prediction interval of $(789.3797,1038.779)$. Over the first five years the January figure steadily rises from $697 \rightarrow 1032$.
 * The February value of year 6 is predicted to be 993.7539, with a 95 percent prediction interval of $(844.8963,1142.612)$. Over the first five years the January figure steadily rises from $776 \rightarrow 1126$.
 
 
-The dip in sales in the second half of year five heavily influences the forecasted values of year six. Because of that dip, the forecasts for January, February and March are lower than the corresponding values in year five.
+The dip in the upward trend of sales in the second half of year five influences the forecasted values of year six. Because of that dip, the forecasts for January, February and March are lower than the corresponding values in year five.
 
 
 
@@ -331,28 +356,8 @@ plot(forecast(HoltWinters(plastics, seasonal="additive"), level=c(80,95)))
 ```
 The dark shaded region shows 80% prediction intervals. That is, each future value is expected to lie in the dark shaded region with a probability of 80%. The light shaded region shows 95% prediction intervals. These prediction intervals are a useful way of displaying the uncertainty in forecasts.
 
-The forecasted shape of year six is similar to that of year three. However the forecast into year seven seems to assume that the original trend will resume.
+The forecasted shape of year six is similar to that of year three. The forecast into year seven resumes the upward trend with respect to year six.
 
-Moreover we can plot the forecast and compare it to the additive model to see the difference.
-
-
-
-
-
-```{r message=FALSE, fig.align = 'center'}
-fit1 <- hw(plastics,seasonal="additive")
-fit2 <- hw(plastics,seasonal="multiplicative")
-autoplot(plastics) +
-  autolayer(fit1, series="HW additive forecasts", PI=TRUE) +
-  autolayer(fit2, series="HW multiplicative forecasts",
-    PI=FALSE) +
-  xlab("Year") +
-  ylab("Sales") +
-  ggtitle("Plastics Sales") +
-  guides(colour=guide_legend(title="Forecast"))
-```
-
-In year six the multiplicative forecast is just contained just within the 95 percent prediction interval. It seems the multiplicative model would have taken less of an impact from the decrease in seasonality in the second half of year five.
 
 
 ## Residual Diagnostics
@@ -366,7 +371,45 @@ mean(res)
 This shows that our method produces a forecast that appear to account for all available information. The mean of the residuals is relatively close to zero and there is no significant correlation in the residuals. It resembles white noise. 
 
 # Conclusion
-The plastics data admits a clear trend and seasonality, however in the final half of year five that pattern slightly changes. We chose the Holt Winters Additive Model with Seasonality due to the fact it had the smallest SSE and used it to compute the forecast of the next three months. From this we learned that due to the changes in year five the Holt Winters model predicted lower values for year six than those of year five.
+The plastics data admits a clear upward trend and seasonality. We chose the Holt Winters Additive Model with Seasonality due to the fact it had the smallest SSE and used it to compute the forecast of the next three months. The algorithm predicted that the next three months will have values lower than that of the corrosponding months from the previous year.
+
+<!-- ----------------------------------------------- --> 
+<!-- ----------------QUESTION 2-------------------- --> 
+<!-- ----------------------------------------------- --> 
+
+# Summary a
+
+The Holt-Winters method has been used since 1957 to produce simple and effective short-term demand forecasts where the data contains a trend and a seasonal pattern. Since its conception, researchers have looked to extend the algorithm in three areas at which the original algorithm lacked: the influence of outliers, multiple seasonal cycles and utilising prediction intervals.
+
+Outliers can cause problems for the Holt-Winters method as the estimates for the level, trend or seasonal pattern and the optimisation of the smoothing constants may be affected by them; leading to inaccurate forecasts. The method was extended by Sarah Gelper and her colleagues by an easily implemented mechanism which automatically identifies outliers and downgrades their influence. It identifies forecasts, with a one-step ahead error that exceeds a certain threshold, as outliers and replaces it with a cleaned value. This method has been shown to perform better than the Holt-Winters when outliers are present. It also preformed well when outliers weren't present.
+
+The Holt-Winters method wasn’t designed to deal with multiple seasonal cycles during the course of a year. The method was extended by James Taylor to deal with double and triple seasonal cycles by incorporating an additional smoothing constant and equations for each extra cycle. The triple-cycle method was more accurate than traditional Holt-Winters when tested on half-hourly electricity demand data. Its preformance was similar to that of n ARMA model designed for three seasonal cycles.
+
+Prediction intervals for the Holt-Winters method underestimate the level of uncertainty there is when predicting the future. When fitting the model there is uncertainty in the smoothing constants and the initial values used in the Holt-Winters method. This has been extended by José D. Bermúdez et al., introducing a method that utilises a Bayesian framework which allows for uncertainty in the smoothing constants and initial values to be represented by probability distributions, which are updates as new data comes in. This method is complex but gave impressive results when tested.
+
+
+
+# Summary b
+In ‘Statistical and Machine Learning forecasting methods: Concerns and ways forward’, Makridakis et al. illustrates that statistical methods are currently more dominant than Machine Learning(ML) methods in their practical applications to time-series forecasting. In particular, it’s interesting that the trade-off for using the computationally complex methods do not result in a more accurate forecast.
+
+Forecasting methods are used in various commercial and scientific applications, therefore having a computationally easy method can be extremely important. For some short-term forecasts, compromising on accuracy for a model which takes less time to fit may be beneficial.
+Makridakis introduces two definitions when comparing computational complexity and forecasting accuracy. The computation complexity (CC) of fitting a model is defined as being the time taken to fit the model divided by the time taken to fit the naïve model to the dataset. $$CC=\frac{Computational Time: Model}{Computational Time: Naïve}$$
+The accuracy of the forecast is defined to be the sMAPE on the validation set. $$sMAPE=\frac{2}{k} \sum_{t=1}^k \frac{|(Y_t-\hat{Y}_t)|}{(|Y_t|+|\hat{Y}_t|)} \times 100%$$
+Where $k$ is the forecast horizon, $Y_t$,$\hat{Y}_t$ are actual and forecasted values, respectively.
+
+Multiple ML and Statistical methods were fit to the 3003 time-series in order to see which would have more predictive power on a validation set. Makridakis found that the six most accurate forecasting methods were statistical. The only ML methods which outperformed the naïve benchmark were the BNN and MLP created by both Makridakis and Ahmed et al. The most accurate models were found to be ETS, ARIMA, Damped, Theta, SES and HoltWinters.
+Thus, knowing that ML algorithms are, in general, more computational complex than statistical ones, we expect the less complex statistical models will have a higher predictive power.
+
+If we analyse the five statistical methods which give lowest sMAPE on the validation set, then the most computationally difficult of these are ARIMA and ETS, which outperform the easily computable Damped, Comb and Theta, but with very small margins. The computational complexity of ARIMA and ETS are significantly greater than the others, however ETS and ARIMA give an sMAPE of 7.12 and 7.19 respectively, while Damped, Comb and Theta give an sMAPE of 7.19, 7.20 and 7.23, respectively. ARIMA has the highest computational complexity but gives the same sMAPE as that of the Damped, which has one of the lowest CC values. 
+
+Solely analysing the ML methods leads to a similar result, the two methods which give the lowest sMAPE are the BNN and MLP; which have two of the highest computational complexity. However, if we look at the LSTM model we see it is of similar computational complexity but has a drastically different sMAPE (11.67 compared to 8.17). Moreover, the RBF which has the highest CC value only gives a sMAPE of 9.57. Thus we see that the higher end of the models to give the lowest sMAPE but equally complex models give much worse results.
+Comparing both classes, we see the best ML method, BNN, gives an sMAPE of 8.17, while the worst statistical method, HoltWinters, gives an sMAPE of 7.32; while BNN is far more complex than HoltWinters. In particular the highly computationally complex ML methods do not seem to be worth the higher computation time.
+
+Thus, we see that choosing the most computationally complex model will not necessarily give us the most accurate forecast. In fact, opting for the computationally easy algorithms seems lucrative as the trade-off for higher complexity may not be rewarding. 
+
+
+
+
 
 
 </font>
